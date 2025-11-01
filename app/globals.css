@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-brand-surface text-brand-neutral;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+a {
+  @apply text-brand-secondary underline-offset-4 hover:underline;
+}
