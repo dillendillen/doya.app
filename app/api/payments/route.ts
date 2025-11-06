@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/lib/audit";
+import { getUserId } from "@/lib/auth/get-user-id";
 
 const createPaymentSchema = z.object({
   clientId: z.string().min(1, "Client is required"),
@@ -49,36 +50,51 @@ export async function POST(request: Request) {
     // Convert UI method to enum value, default to OTHER if not found
     const paymentMethod = methodMap[payload.method.trim()] || "OTHER";
 
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Not authenticated." },
+        { status: 401 }
+      );
+    }
+
     // Convert amount to cents
     const amountCents = Math.round(payload.amount * 100);
 
-    // Verify client exists
+    // Verify client exists and belongs to user
     const client = await prisma.client.findUnique({
       where: { id: payload.clientId },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
 
     if (!client) {
       return NextResponse.json({ error: "Client not found." }, { status: 404 });
     }
 
+    if (client.userId !== userId) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 }
+      );
+    }
+
     // If invoiceId provided, verify it exists and link payment to invoice
     // Otherwise, create a new invoice for this payment
     let payment;
     
-    if (payload.invoiceId) {
+      if (payload.invoiceId) {
       // Verify invoice exists and get currency
       const invoice = await prisma.invoice.findUnique({
         where: { id: payload.invoiceId },
-        select: { id: true, clientId: true, currency: true },
+        select: { id: true, clientId: true, currency: true, userId: true },
       });
 
       if (!invoice) {
         return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
       }
 
-      // Verify invoice belongs to the client
-      if (invoice.clientId !== payload.clientId) {
+      // Verify invoice belongs to the client and user
+      if (invoice.clientId !== payload.clientId || invoice.userId !== userId) {
         return NextResponse.json({ error: "Invoice does not belong to this client." }, { status: 400 });
       }
 
@@ -96,6 +112,7 @@ export async function POST(request: Request) {
         // Create payment with currency from invoice
         return await tx.payment.create({
           data: {
+            userId,
             invoiceId: invoice.id,
             amountCents,
             method: paymentMethod,
@@ -110,6 +127,7 @@ export async function POST(request: Request) {
       // This creates a minimal invoice just for record-keeping
       const invoice = await prisma.invoice.create({
         data: {
+          userId,
           clientId: payload.clientId,
           currency: payload.currency,
           totalCents: amountCents,
@@ -122,6 +140,7 @@ export async function POST(request: Request) {
       // Create payment linked to the new invoice
       payment = await prisma.payment.create({
         data: {
+          userId,
           invoiceId: invoice.id,
           amountCents,
           method: paymentMethod,

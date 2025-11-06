@@ -212,13 +212,14 @@ let hasWarnedMissingClientNoteDog = false;
 
 async function loadClientRecord(
   id: string,
+  userId: string,
 ): Promise<{
   client: LoadedClient | null;
   notesIncludeDog: boolean;
 }> {
   if (clientNoteDogIncludeAvailable === false) {
-    const client = await prisma.client.findUnique({
-      where: { id },
+    const client = await prisma.client.findFirst({
+      where: { id, userId },
       include: CLIENT_DETAIL_INCLUDE_WITHOUT_NOTE_DOG,
     });
 
@@ -226,8 +227,8 @@ async function loadClientRecord(
   }
 
   try {
-    const client = await prisma.client.findUnique({
-      where: { id },
+    const client = await prisma.client.findFirst({
+      where: { id, userId },
       include: CLIENT_DETAIL_INCLUDE_WITH_NOTE_DOG,
     });
 
@@ -247,8 +248,8 @@ async function loadClientRecord(
         );
       }
 
-      const client = await prisma.client.findUnique({
-        where: { id },
+      const client = await prisma.client.findFirst({
+        where: { id, userId },
         include: CLIENT_DETAIL_INCLUDE_WITHOUT_NOTE_DOG,
       });
 
@@ -270,6 +271,11 @@ function formatLanguage(value: string | null | undefined) {
 }
 
 export async function listClients(): Promise<ClientListItem[]> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return [];
+  }
+
   if (!isDatabaseConfigured()) {
     return FALLBACK_CLIENTS.map((client) => ({
       id: client.id,
@@ -283,6 +289,7 @@ export async function listClients(): Promise<ClientListItem[]> {
 
   try {
     const rows = await prisma.client.findMany({
+      where: { userId: user.id },
       orderBy: { name: "asc" },
     });
 
@@ -308,13 +315,18 @@ export async function listClients(): Promise<ClientListItem[]> {
 }
 
 export async function getClientById(id: string): Promise<ClientDetail | null> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+
   if (!isDatabaseConfigured()) {
     const fallback = FALLBACK_CLIENTS.find((client) => client.id === id);
     return fallback ? buildClientDetail(fallback) : null;
   }
 
   try {
-    const { client, notesIncludeDog } = await loadClientRecord(id);
+    const { client, notesIncludeDog } = await loadClientRecord(id, user.id);
 
     if (!client) {
       return null;
@@ -341,6 +353,7 @@ export async function getClientById(id: string): Promise<ClientDetail | null> {
     // Get all payments for this client to calculate balance
     const payments = await prisma.payment.findMany({
       where: {
+        userId: user.id,
         invoice: {
           clientId: id,
         },

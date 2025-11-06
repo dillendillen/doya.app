@@ -1,269 +1,249 @@
-DOYA Training Platform – Functional Prototype (Trainer-Only)
+# 🐕 DOYA Training Platform
+
+> A comprehensive SaaS platform for professional dog trainers to manage clients, sessions, billing, and training programs.
 
-
-⸻
-
-Scope Statement
-	•	Primary user: Dog Trainer (owner of the business).
-	•	Single-pane cockpit: One dashboard for operations, notes, scheduling, billing, documents, and media.
-	•	Client access: Not part of this dashboard. A separate, minimal portal (or share links) may expose videos only later.
-	•	Data model: Trainer is the source of truth. All records (dogs, clients, sessions, invoices) are owned by the trainer.
-
-⸻
-
-Dashboard (Home)
-
-Your “what matters right now” screen. It must answer: What’s next? What’s blocked? What needs my attention?
-
-Contents
-	•	Today at a Glance: upcoming sessions (time, dog, location), travel buffers, “Start Session” shortcuts.
-	•	Action Queue: unsent invoices, unsigned waivers, booking requests, overdue notes, media to review.
-	•	Quick Capture: one-click “New Session,” “Add Dog,” “Add Client,” “New Booking,” “Upload Media,” “Create Invoice.”
-	•	KPI Tiles: booked hours vs. capacity this week, cancellations, revenue MTD, outstanding invoices count/value.
-	•	Recent Activity: last 10 events (session logged, document signed, payment recorded).
-	•	Watchlist: pinned dogs/clients (e.g., reactivity cases, medical flags) with fast links.
-
-Outcomes
-	•	Start the next session in ≤2 clicks.
-	•	See blockers without searching.
-	•	Log a note or upload media without leaving.
-
-⸻
-
-Sidebar (Trainer Modules)
-	•	Dashboard
-	•	Sessions
-	•	Dogs
-	•	Clients
-	•	Calendar
-	•	Docs
-	•	Media
-	•	Billing
-	•	Settings
-
-Below is what each module must do.
-
-⸻
-
-Sessions
-
-Purpose: Plan, run, and record sessions quickly and consistently.
-
-Views
-	•	List: filter by date range, dog, client, status (scheduled/completed), location (home/field/remote).
-	•	Detail / Live Mode: timer, structured notes (objective → exercises → outcome), quick tags, homework field, attachments.
-
-Core Flows
-	•	Create from calendar or ad-hoc.
-	•	Start timer, record exercises, attach photos/video, mark outcome.
-	•	Assign homework (simple text + optional checklist).
-	•	Conclude: finalize notes, auto-summary for your records.
-
-Automations
-	•	Flag incomplete notes after N hours.
-	•	Suggest “copy last session template” for recurring dogs.
-	•	Add “review homework” to Action Queue X days later.
-
-⸻
-
-Dogs
-
-Purpose: The canonical record for each dog.
-
-Views
-	•	List: search + tags (reactive, puppy, medical).
-	•	Profile: identity (breed, DOB, sex, weight), owner link, medical flags, training plan overview, sessions history, media timeline, documents.
-
-Core Flows
-	•	Create/update profile with photo and flags.
-	•	Maintain a Training Plan (goals, milestones, tasks, status).
-	•	Add Progress Logs outside sessions (quick note + media).
-	•	Pin to Watchlist.
-
-Signals
-	•	Stagnant plan (no progress in N days).
-	•	Medical review due (custom reminders you configure).
-
-⸻
-
-Clients
-
-Purpose: Minimal CRM for owners.
-
-Views
-	•	List: filter by status (lead/active/lapsed).
-	•	Profile: contacts, dogs, notes, sessions, invoices, documents.
-
-Core Flows
-	•	Capture lead → convert to client.
-	•	Add internal notes and follow-up reminders (only visible to you).
-	•	See account health (unpaid invoices, cancellations, attendance).
-
-Non-Goals (for prototype)
-	•	No client messaging inbox.
-	•	No client login here.
-
-⸻
-
-Calendar
-
-Purpose: Your schedule and availability.
-
-Views
-	•	Week/Month calendar with color-coded service types.
-	•	Availability editor (recurring hours, exceptions, blackout dates).
-
-Core Flows
-	•	Create bookings (select client/dog/service/time).
-	•	Reschedule/cancel with conflict guard.
-	•	Generate suggested slots based on availability + service duration + buffers.
-
-Optional Later
-	•	Two-way sync with Google Calendar (not required for prototype, but design should allow it).
-
-⸻
-
-Docs
-
-Purpose: Your legal and intake paperwork (trainer-side only).
-
-Views
-	•	Templates (waiver, intake, training plan PDF wrappers).
-	•	Library attached to dogs/clients.
-
-Core Flows
-	•	Generate from template with variables filled from record data.
-	•	Track status (draft/sent/signed) — trainer records of consent.
-	•	Store scans or uploaded PDFs.
-
-Non-Goals (for prototype)
-	•	No e-signature pipeline required; you can attach signed files manually.
-	•	No client-facing document viewer here.
-
-⸻
-
-Media
-
-Purpose: Centralize photos/videos you record.
-
-Views
-	•	Library with filters (by dog, session, tag) and timeline view.
-	•	Item detail with note/caption and linked entities (dog/session).
-
-Core Flows
-	•	Upload from session flow or standalone.
-	•	Tag (behavior, drill, milestone).
-	•	Generate a share link (read-only) for a curated set — this is the minimal client touchpoint later.
-
-Retention
-	•	Keep forever by default; allow archive after N months.
-
-⸻
-
-Billing
-
-Purpose: Track money with minimal friction.
-
-Views
-	•	Invoices by status (draft/open/overdue/paid).
-	•	Payments log.
-	•	Products/Services list with pricing.
-
-Core Flows
-	•	Create invoice (from session or manual).
-	•	Mark as paid (cash/transfer) or record reference (card/SEPA outside).
-	•	Issue credit/discount manually when needed.
-
-Non-Goals (for prototype)
-	•	No Stripe checkout flows required yet.
-	•	No tax exports beyond a simple CSV later.
-
-⸻
-
-Settings
-
-Purpose: Your business controls.
-
-Areas
-	•	Business Profile: name, logo (for documents), preferred currency.
-	•	Services: names, durations, price, buffers, on-site vs. remote.
-	•	Availability: recurring hours, travel buffers, blackout days.
-	•	Templates: session note skeleton, homework text presets, document boilerplates.
-	•	Policies: cancellation window notes for your reference.
-	•	Data Tools: export CSVs (clients, dogs, sessions, invoices).
-
-Non-Goals (for prototype)
-	•	No multi-user roles.
-	•	No branding theming for public pages (since none exist yet).
-
-⸻
-
-Minimal Data Model (Trainer-only semantics)
-	•	Client (owner) ↔ Dog(s)
-	•	Dog ↔ TrainingPlan ↔ PlanTasks
-	•	Booking ↔ Session (1:1)
-	•	Invoice ↔ InvoiceItems ↔ Payments (manual status updates allowed)
-	•	Document attached to Client or Dog
-	•	Media attached to Dog and/or Session
-	•	Availability defines slot suggestions
-
-(You own all records; there are no external user accounts.)
-
-⸻
-
-Core Workflows (End-to-End)
-	1.	Lead → Client (internal)
-	•	Add lead with basic info → convert to client when ready.
-	2.	Client/Dog Setup
-	•	Create client → add dog → set flags → optional plan scaffold.
-	3.	Booking → Session
-	•	Create booking from Calendar → run session in Live Mode → finish notes, assign homework.
-	4.	Post-Session
-	•	Upload media (optional), write quick Progress Log, add follow-up reminder if needed.
-	5.	Billing
-	•	Create invoice → mark status (paid/unpaid/overdue).
-	•	Dashboard shows unpaid count/value.
-	6.	Docs
-	•	Attach intake/waiver (scanned or generated) to client/dog records.
-
-⸻
-
-KPIs & Signals (Trainer view only)
-	•	Booked hours vs. capacity (week).
-	•	No-shows and cancellations (week/month).
-	•	Unpaid invoices (count/value).
-	•	Dogs with stagnant plans (no progress in N days).
-	•	Action Queue aging (items older than N days).
-
-⸻
-
-Quality Bar (Prototype Definition of Done)
-	•	Dashboard reflects live data: sessions today, Action Queue, KPIs.
-	•	Sessions can be created, run with timer and structured notes, and closed with homework saved.
-	•	Dogs/Clients are fully CRUD-able; plans and tasks can be added/updated.
-	•	Calendar supports booking, rescheduling, cancellation with availability rules.
-	•	Docs can be attached and organized by client/dog.
-	•	Media can be uploaded, tagged, linked, and curated into share sets.
-	•	Billing can issue invoices and record payment status.
-	•	Settings allow configuration of services, availability, templates, and business profile.
-	•	Everything is trainer-private; no external logins required.
-
-⸻
-
-Non-Goals (Prototype)
-	•	No client portal/login.
-	•	No e-signature or payment gateways.
-	•	No multi-trainer roles or permissions.
-	•	No Google/Stripe integrations.
-	•	No automated emails/SMS.
-	•	No analytics beyond basic KPI tiles.
-
-⸻
-IGNORE FOR NOW : 
-Future: Minimal Client Media Portal (Read-Only)
-
-When you’re ready, add a separate, simple portal:
-	•	Access: per-share link or PIN (no full accounts).
-	•	Content: assigned videos only; short captions.
-	•	No messaging, no booking, no billing.
-	•	Audit: trainer can revoke links anytime.
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.17-2D3748?logo=prisma)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-316192?logo=postgresql)](https://www.postgresql.org/)
+
+---
+
+## 📋 Overview
+
+DOYA Training Platform is a modern, all-in-one solution designed specifically for dog trainers. It streamlines operations by providing a unified dashboard for managing clients, dogs, training sessions, billing, packages, and more. Built with scalability and multi-tenancy in mind, each trainer has their own isolated workspace.
+
+### Key Features
+
+- 🎯 **Client & Dog Management** - Comprehensive CRM for owners and their dogs
+- 📅 **Session Scheduling** - Plan, track, and record training sessions with detailed notes
+- 💰 **Billing & Payments** - Invoicing, payment tracking, and package management
+- 📦 **Package System** - Create templates and client-specific training packages
+- 📊 **Revenue Analytics** - Track income, outstanding payments, and financial overview
+- 📝 **Training Plans** - Structure goals, milestones, and progress tracking
+- 📸 **Media Library** - Organize photos and videos by dog, session, or tags
+- 📄 **Document Management** - Store and manage waivers, intake forms, and training plans
+- 🔐 **Multi-Tenant Architecture** - Secure, isolated data per user
+- 🌙 **Dark Mode** - Beautiful UI with light/dark theme support
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm/yarn
+- PostgreSQL database
+- Docker (optional, for database)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd doya-app
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Configure your `.env` file:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/doya"
+   NEXTAUTH_SECRET="your-secret-key-here"
+   NEXTAUTH_URL="http://localhost:3002"
+   ```
+
+4. **Set up the database**
+   ```bash
+   npx prisma migrate dev
+   npx prisma generate
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3002](http://localhost:3002)
+
+---
+
+## 🏗️ Tech Stack
+
+### Core
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+
+### UI & Styling
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Components**: [Radix UI](https://www.radix-ui.com/) + Custom components
+- **Icons**: [Heroicons](https://heroicons.com/)
+- **Charts**: [Recharts](https://recharts.org/)
+
+### Additional Libraries
+- **Validation**: [Zod](https://zod.dev/)
+- **Date Handling**: [date-fns](https://date-fns.org/)
+- **State Management**: [TanStack Query](https://tanstack.com/query)
+
+---
+
+## 📁 Project Structure
+
+```
+doya-app/
+├── app/
+│   ├── (app)/          # Protected application routes
+│   │   ├── clients/    # Client management
+│   │   ├── dogs/       # Dog profiles
+│   │   ├── sessions/   # Training sessions
+│   │   ├── billing/    # Billing & payments
+│   │   ├── packages/   # Package management
+│   │   └── ...
+│   ├── (auth)/         # Authentication routes
+│   │   └── login/      # Login page
+│   ├── api/            # API routes
+│   └── layout.tsx      # Root layout
+├── components/         # React components
+│   ├── auth/           # Authentication components
+│   ├── billing/        # Billing components
+│   ├── clients/        # Client components
+│   └── ...
+├── lib/
+│   ├── auth/           # Authentication utilities
+│   ├── data/           # Data access layer
+│   └── prisma.ts       # Prisma client
+├── prisma/
+│   ├── schema.prisma   # Database schema
+│   └── migrations/     # Database migrations
+└── public/             # Static assets
+```
+
+---
+
+## 🔐 Authentication
+
+The platform uses session-based authentication with secure password hashing. Each user has their own isolated workspace with complete data separation.
+
+### User Registration
+
+Currently, user registration can be done through:
+- Admin-created accounts
+- Self-registration (if enabled)
+
+### Security Features
+
+- Password hashing with bcrypt
+- HTTP-only session cookies
+- Route protection middleware
+- Multi-tenant data isolation
+
+---
+
+## 📊 Database Schema
+
+Key models include:
+- **User** - Trainer accounts
+- **Client** - Dog owners
+- **Dog** - Individual dogs
+- **Session** - Training sessions
+- **Package** - Training packages (templates & client-specific)
+- **Payment** - Payment records
+- **Invoice** - Invoices linked to payments
+- **TrainingPlan** - Structured training plans
+- **Document** - Stored documents
+- **Media** - Photos and videos
+
+All tenant-scoped models include a `userId` field for data isolation.
+
+---
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+npm run dev      # Start development server (port 3002)
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
+```
+
+### Database Commands
+
+```bash
+npx prisma studio          # Open Prisma Studio
+npx prisma migrate dev     # Create and apply migration
+npx prisma generate        # Regenerate Prisma Client
+npx prisma db push         # Push schema changes (dev only)
+```
+
+---
+
+## 🎨 Features in Detail
+
+### Dashboard
+- Today's sessions overview
+- Action queue for pending tasks
+- Quick capture for common actions
+- KPI tiles (revenue, bookings, etc.)
+- Recent activity feed
+
+### Sessions
+- Create and manage training sessions
+- Timer functionality for live sessions
+- Structured notes with objectives
+- Package assignment and credit tracking
+- Media attachments
+
+### Billing
+- Invoice generation
+- Payment recording and tracking
+- Package management
+- Revenue overview with charts
+- Outstanding balance tracking
+
+### Clients & Dogs
+- Comprehensive profiles
+- Training plan management
+- Session history
+- Document storage
+- Media galleries
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is private and proprietary.
+
+---
+
+## 🆘 Support
+
+For issues, questions, or feature requests, please open an issue in the repository.
+
+---
+
+**Built with ❤️ for dog trainers**

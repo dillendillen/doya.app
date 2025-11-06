@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
+import { getUserId } from "@/lib/auth/get-user-id";
 
 const createClientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -48,11 +49,20 @@ export async function POST(request: Request) {
   }
 
   try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Not authenticated." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const payload = createClientSchema.parse(body);
 
     const client = await prisma.client.create({
       data: {
+        userId,
         name: payload.name,
         phone: payload.phone ?? null,
         email: payload.email ?? null,

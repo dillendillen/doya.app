@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
+import { getUserId } from "@/lib/auth/get-user-id";
 
 const optionalText = z
   .string()
@@ -41,6 +42,31 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Not authenticated." },
+        { status: 401 }
+      );
+    }
+
+    // Verify client belongs to user
+    const existingClient = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: { userId: true },
+    });
+
+    if (!existingClient) {
+      return NextResponse.json({ error: "Client not found." }, { status: 404 });
+    }
+
+    if (existingClient.userId !== userId) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const payload = updateClientSchema.parse(body);
 
@@ -71,13 +97,16 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       updateData.notes = payload.notes ?? null;
     }
 
-    const client = await prisma.client.update({
-      where: { id: clientId },
+    const result = await prisma.client.updateMany({
+      where: { id: clientId, userId },
       data: updateData,
-      select: { id: true },
     });
 
-    return NextResponse.json({ client }, { status: 200 });
+    if (result.count === 0) {
+      return NextResponse.json({ error: "Client not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ client: { id: clientId } }, { status: 200 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

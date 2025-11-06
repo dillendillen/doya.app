@@ -1,4 +1,5 @@
 import { isDatabaseConfigured, prisma } from "../prisma";
+import { getSession } from "../auth/session";
 
 export type CurrentUser = {
   id: string;
@@ -9,28 +10,35 @@ export type CurrentUser = {
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
+  // Get session from cookie
+  const session = await getSession();
+
+  if (!session) {
+    return null;
+  }
+
   if (!isDatabaseConfigured()) {
-    // Return a default user for demo
+    // Return session data if database is not configured
     return {
-      id: "demo-user",
-      name: "Demo User",
-      email: "demo@doya.dog",
-      role: "OWNER",
+      id: session.userId,
+      name: session.name,
+      email: session.email,
+      role: session.role,
       locale: "en",
     };
   }
 
   try {
-    // Get the first owner/admin user, or first user if no owner
-    const user = await prisma.user.findFirst({
-      where: {
-        role: {
-          in: ["OWNER", "ADMIN"],
-        },
+    // Fetch fresh user data from database
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        locale: true,
       },
-      orderBy: { createdAt: "asc" },
-    }) || await prisma.user.findFirst({
-      orderBy: { createdAt: "asc" },
     });
 
     if (!user) {
