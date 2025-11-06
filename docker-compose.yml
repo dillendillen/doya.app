@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: doya-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: doya
+      POSTGRES_USER: doya_app
+      POSTGRES_PASSWORD: supersecurepassword
+      TZ: UTC
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doya_app -d doya"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - doya-app_default
+
+  #pgadmin:
+  #  image: dpage/pgadmin4:8
+  #  container_name: doya-pgadmin
+  #  restart: unless-stopped
+  #  environment:
+  #    PGADMIN_DEFAULT_EMAIL: woef@doya.dog
+ #     PGADMIN_DEFAULT_PASSWORD: supersecurepassword
+ #   ports:
+ #     - "8086:80"
+ #   depends_on:
+ #     postgres:
+ #       condition: service_healthy
+
+  doya-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: doya-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://doya_app:supersecurepassword@postgres:5432/doya
+      NODE_ENV: development
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # optional: mount code for live edit (remove for production)
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - doya-app_default
+
+networks:
+  doya-app_default:
+
+volumes:
+  postgres-data:
+    driver: local

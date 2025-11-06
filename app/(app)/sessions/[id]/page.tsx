@@ -1,120 +1,151 @@
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { getSessionById } from "@/lib/data/sessions";
+import { serializeSessionData } from "@/lib/utils/session-serialization";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { DeleteSessionButton } from "@/components/sessions/delete-session-button";
+import { AssignPackageButton } from "@/components/sessions/assign-package-button";
+import dynamic from "next/dynamic";
+
+const SessionDetailClient = dynamic(() => import("./session-detail-client").then((mod) => mod.SessionDetailClient), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-6">
+      <p className="text-sm text-neutral-500">Loading session details...</p>
+    </div>
+  ),
+});
 
 type SessionDetailPageProps = {
   params: { id: string };
 };
 
-export default function SessionDetailPage({ params }: SessionDetailPageProps) {
-  const session = getSessionById(params.id);
+export default async function SessionDetailPage({ params }: SessionDetailPageProps) {
+  const { id } = await params;
+  const session = await getSessionById(id);
 
   if (!session) {
     notFound();
   }
 
+  // Serialize session data for client-side rendering
+  const serializedSession = serializeSessionData(session);
+
   return (
     <div className="space-y-6">
       <TopBar
-        title={`Session · ${session.dogName}`}
+        title={serializedSession.title || `Session with ${serializedSession.dogName}`}
         actions={[
-          { label: "Start Timer" },
-          { label: "Complete Session" },
+          { label: "Back to Sessions", href: "/sessions" },
+          {
+            key: "delete-session",
+            node: (
+              <DeleteSessionButton
+                sessionId={serializedSession.id}
+                sessionTitle={serializedSession.title || `Session with ${serializedSession.dogName}`}
+              />
+            ),
+          },
         ]}
       />
 
-      <Card>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div>
-            <p className="text-xs uppercase text-neutral-500">When</p>
-            <p className="text-sm font-medium text-brand-secondary">
-              {format(parseISO(session.datetime), "PPP · HH:mm")}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase text-neutral-500">Location</p>
-            <p className="text-sm text-neutral-600">{session.location}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase text-neutral-500">Trainer</p>
-            <p className="text-sm text-neutral-600">{session.trainerName}</p>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-3">
-          <Badge
-            variant={
-              session.status === "done"
-                ? "success"
-                : session.status === "in_progress"
-                  ? "warning"
-                  : "muted"
-            }
-          >
-            {session.status.replace("_", " ")}
-          </Badge>
-          <span className="text-sm text-neutral-500">
-            Duration {session.durationMin} min
-          </span>
-        </div>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Objectives">
-          <ul className="space-y-2 text-sm text-neutral-600">
-            {session.objectives.map((objective, index) => (
-              <li key={index} className="rounded-lg border border-neutral-200 p-3">
-                {objective}
-              </li>
-            ))}
-          </ul>
+      <section className="grid gap-6 lg:grid-cols-[320px,1fr]">
+        <Card title="Session Info">
+          <dl className="space-y-3 text-sm text-neutral-600">
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Dog</dt>
+              <dd>
+                <Link
+                  href={`/dogs/${serializedSession.dogId}`}
+                  className="font-semibold text-brand-secondary hover:underline"
+                >
+                  {serializedSession.dogName}
+                </Link>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Date & Time</dt>
+              <dd>{format(parseISO(serializedSession.datetime), "MMM d, yyyy 'at' HH:mm")}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Location</dt>
+              <dd>{serializedSession.location}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Duration</dt>
+              <dd>{serializedSession.durationMin} minutes</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Status</dt>
+              <dd>
+                <Badge
+                  variant={
+                    serializedSession.status === "done"
+                      ? "success"
+                      : serializedSession.status === "in_progress"
+                        ? "warning"
+                        : "muted"
+                  }
+                >
+                  {serializedSession.status.replace("_", " ")}
+                </Badge>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Trainer</dt>
+              <dd>{serializedSession.trainerName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase text-neutral-500">Package</dt>
+              <dd>
+                {serializedSession.packageInfo ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-brand-secondary">
+                        {serializedSession.packageInfo.type}
+                      </p>
+                      <AssignPackageButton
+                        sessionId={serializedSession.id}
+                        clientId={serializedSession.clientId}
+                        currentPackageId={serializedSession.packageId}
+                        currentPackageInfo={serializedSession.packageInfo}
+                      />
+                    </div>
+                    <p className="text-xs text-neutral-600">
+                      <span className={serializedSession.packageInfo.sessionsRemaining <= 1 ? "font-bold text-rose-600" : "text-neutral-600"}>
+                        {serializedSession.packageInfo.sessionsRemaining} session{serializedSession.packageInfo.sessionsRemaining !== 1 ? "s" : ""} remaining
+                      </span>
+                      {" "}/ {serializedSession.packageInfo.totalSessions} total
+                    </p>
+                    {serializedSession.status === "done" && (
+                      <p className="text-xs text-green-600 font-medium">
+                        ✓ 1 session deducted from package
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-neutral-500 italic">No package assigned</span>
+                    <AssignPackageButton
+                      sessionId={serializedSession.id}
+                      clientId={serializedSession.clientId}
+                      currentPackageId={null}
+                      currentPackageInfo={null}
+                    />
+                  </div>
+                )}
+              </dd>
+            </div>
+          </dl>
         </Card>
-        <Card title="Scorecards">
-          <ul className="space-y-2 text-sm text-neutral-600">
-            {session.scorecards.map((item, index) => (
-              <li
-                key={`${item.skill}-${index}`}
-                className="flex items-center justify-between rounded-lg border border-neutral-200 p-3"
-              >
-                <span>{item.skill}</span>
-                <Badge variant="muted">{item.score}/5</Badge>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
 
-      <Card title="Notes">
-        <p className="whitespace-pre-line text-sm text-neutral-700">
-          {session.notes || "Notes will be captured here."}
-        </p>
-      </Card>
-
-      <Card title="Next Steps">
-        <ul className="space-y-2 text-sm text-neutral-600">
-          {session.nextSteps.map((step, index) => (
-            <li
-              key={`${step.text}-${index}`}
-              className="flex items-center justify-between rounded-lg border border-neutral-200 p-3"
-            >
-              <div>
-                <p className="font-medium text-brand-secondary">{step.text}</p>
-                <p className="text-xs text-neutral-500">
-                  Due {step.due ? format(parseISO(step.due), "MMM d") : "Flexible"}
-                </p>
-              </div>
-              <Badge variant={step.status === "done" ? "success" : "warning"}>
-                {step.status}
-              </Badge>
-            </li>
-          ))}
-          {session.nextSteps.length === 0 && (
-            <p className="text-neutral-500">No follow-up steps captured.</p>
-          )}
-        </ul>
-      </Card>
+        <div className="space-y-6">
+          <SessionDetailClient session={serializedSession} />
+        </div>
+      </section>
     </div>
   );
 }

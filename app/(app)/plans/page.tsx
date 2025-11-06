@@ -4,8 +4,8 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export default function PlansPage() {
-  const plans = listPlans();
+export default async function PlansPage() {
+  const plans = await listPlans();
 
   return (
     <div className="space-y-6">

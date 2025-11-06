@@ -1,9 +1,10 @@
+import { ReactNode } from "react";
 import { clsx } from "clsx";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "muted";
 
 type BadgeProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   variant?: BadgeVariant;
   className?: string;
 };

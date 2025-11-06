@@ -2,10 +2,13 @@ import { listUsers, getAvailabilitySettings } from "@/lib/data/settings";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NavSettings } from "@/components/settings/nav-settings";
 
-export default function SettingsPage() {
-  const users = listUsers();
-  const availability = getAvailabilitySettings();
+export default async function SettingsPage() {
+  const [users, availability] = await Promise.all([
+    listUsers(),
+    getAvailabilitySettings(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -54,15 +57,16 @@ export default function SettingsPage() {
               Weekly availability
             </p>
             <ul className="space-y-2">
-              {availability.availability.map((slot: { day: string; from: string; to: string }) => (
+              {availability.availability.map((slot) => (
                 <li
                   key={`${slot.day}-${slot.from}`}
                   className="rounded-lg border border-neutral-200 p-3"
                 >
                   <span className="font-medium text-brand-secondary">
                     {slot.day}
-                  </span>
-                  : {slot.from} — {slot.to}
+                  </span>{" "}
+                  · {slot.from} — {slot.to}
+                  {slot.location ? ` · ${slot.location}` : null}
                 </li>
               ))}
               {availability.availability.length === 0 && (
@@ -89,6 +93,8 @@ export default function SettingsPage() {
           </button>
         </div>
       </Card>
+
+      <NavSettings />
     </div>
   );
 }

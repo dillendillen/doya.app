@@ -11,14 +11,14 @@ type PlanDetailPageProps = {
   params: { id: string };
 };
 
-export default function PlanDetailPage({ params }: PlanDetailPageProps) {
-  const plan = getPlanById(params.id);
+export default async function PlanDetailPage({ params }: PlanDetailPageProps) {
+  const plan = await getPlanById(params.id);
 
   if (!plan) {
     notFound();
   }
 
-  const dog = getDogById(plan.dogId);
+  const dog = await getDogById(plan.dogId);
 
   return (
     <div className="space-y-6">
@@ -37,7 +37,7 @@ export default function PlanDetailPage({ params }: PlanDetailPageProps) {
               <p className="text-base font-semibold text-brand-secondary">
                 {dog.name}
               </p>
-              <p>{dog.breed}</p>
+              <p>{dog.breed ?? "—"}</p>
               <p className="text-xs uppercase text-neutral-500">
                 Client{" "}
                 <Link

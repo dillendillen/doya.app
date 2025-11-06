@@ -1,11 +1,25 @@
+import { ReactNode } from "react";
 import { SearchIcon, PlusIcon, ArrowDownIcon } from "../ui/icons";
+
+type TopBarAction =
+  | {
+      key?: string;
+      label: string;
+      href?: string;
+      onClick?: () => void;
+    }
+  | {
+      key: string;
+      node: ReactNode;
+    };
 
 type TopBarProps = {
   title: string;
-  actions?: Array<{ label: string; href?: string; onClick?: () => void }>;
+  actions?: TopBarAction[];
+  extraActions?: ReactNode;
 };
 
-export function TopBar({ title, actions = [] }: TopBarProps) {
+export function TopBar({ title, actions = [], extraActions }: TopBarProps) {
   return (
     <div className="flex flex-col gap-4 bg-white/90 px-4 py-4 backdrop-blur lg:flex-row lg:items-center lg:justify-between lg:px-8">
       <div>
@@ -26,16 +40,47 @@ export function TopBar({ title, actions = [] }: TopBarProps) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {actions.map((action) => (
-            <button
-              type="button"
-              key={action.label}
-              className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-brand-primary hover:text-brand-primary"
-            >
-              <PlusIcon className="h-4 w-4 text-brand-primary" />
-              {action.label}
-            </button>
-          ))}
+          {actions.map((action) => {
+            if ("node" in action) {
+              return (
+                <span key={action.key} className="inline-flex">
+                  {action.node}
+                </span>
+              );
+            }
+
+            const key = action.key ?? action.label;
+            const content = (
+              <>
+                <PlusIcon className="h-4 w-4 text-brand-primary" />
+                {action.label}
+              </>
+            );
+
+            if (action.href) {
+              return (
+                <a
+                  key={key}
+                  href={action.href}
+                  className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-brand-primary hover:text-brand-primary"
+                >
+                  {content}
+                </a>
+              );
+            }
+
+            return (
+              <button
+                type="button"
+                key={key}
+                onClick={action.onClick}
+                className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-brand-primary hover:text-brand-primary"
+              >
+                {content}
+              </button>
+            );
+          })}
+          {extraActions}
           <button
             type="button"
             className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 shadow-sm transition hover:border-brand-secondary hover:text-brand-secondary"

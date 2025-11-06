@@ -1,88 +1,74 @@
-import { listPackages, listInvoices } from "@/lib/data/billing";
+import { listPaymentLogs } from "@/lib/data/billing";
+import { getRevenueByPeriod, getRevenueSummary } from "@/lib/data/revenue";
+import { listClientsForQuickCreate } from "@/lib/data/clients";
 import { TopBar } from "@/components/layout/top-bar";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { NewPaymentButton } from "@/components/billing/new-payment-button";
+import { EditPaymentButton } from "@/components/billing/edit-payment-button";
+import { DeletePaymentButton } from "@/components/billing/delete-payment-button";
+import { RevenueOverview } from "@/components/billing/revenue-overview";
+import { format } from "date-fns";
 
-export default function BillingPage() {
-  const packages = listPackages();
-  const invoices = listInvoices();
+export default async function BillingPage() {
+  const [paymentLogs, revenueByPeriod, revenueSummary, clients] = await Promise.all([
+    listPaymentLogs(),
+    getRevenueByPeriod(),
+    getRevenueSummary(),
+    listClientsForQuickCreate(),
+  ]);
 
   return (
     <div className="space-y-6">
       <TopBar
-        title="Packages & Billing"
+        title="Revenue & Billing"
         actions={[
-          { label: "New Package" },
-          { label: "Export CSV" },
+          {
+            key: "new-payment",
+            node: <NewPaymentButton clients={clients} />,
+          },
         ]}
       />
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card title="Packages">
-          <div className="space-y-4 text-sm text-neutral-600">
-            {packages.map((pkg) => {
-              const creditsLeft = pkg.totalCredits - pkg.usedCredits;
-              return (
-                <div
-                  key={pkg.id}
-                  className="rounded-xl border border-neutral-200 p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-brand-secondary">
-                      {pkg.type}
-                    </p>
-                    <Badge
-                      variant={creditsLeft <= 1 ? "warning" : "muted"}
-                    >
-                      {creditsLeft} credits left
-                    </Badge>
-                  </div>
-                  <p className="text-xs uppercase text-neutral-500">
-                    Total {pkg.totalCredits} · Used {pkg.usedCredits}
-                  </p>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    {pkg.expiresOn
-                      ? `Expires ${new Date(pkg.expiresOn).toLocaleDateString()}`
-                      : "No expiry"}
-                  </p>
-                </div>
-              );
-            })}
-            {packages.length === 0 && (
-              <p className="text-sm text-neutral-500">No packages yet.</p>
-            )}
-          </div>
-        </Card>
+      {/* Revenue Overview with Charts */}
+      <RevenueOverview
+        weeklyData={revenueByPeriod.weekly}
+        monthlyData={revenueByPeriod.monthly}
+        summary={revenueSummary}
+      />
 
-        <Card title="Invoices">
-          <div className="space-y-4 text-sm text-neutral-600">
-            {invoices.map((invoice) => (
-              <div
-                key={invoice.id}
-                className="flex items-center justify-between rounded-xl border border-neutral-200 p-4"
-              >
-                <div>
-                  <p className="font-semibold text-brand-secondary">
-                    #{invoice.id.slice(0, 6).toUpperCase()}
-                  </p>
-                  <p className="text-xs uppercase text-neutral-500">
-                    {invoice.status} ·{" "}
-                    {invoice.issuedOn
-                      ? new Date(invoice.issuedOn).toLocaleDateString()
-                      : "Draft"}
-                  </p>
-                </div>
-                <p className="text-sm font-semibold text-brand-secondary">
-                  {(invoice.total / 100).toFixed(2)} {invoice.currency}
+      {/* Payment Log */}
+      <Card title="Recent Payments">
+        <div className="space-y-4 text-sm text-neutral-600 dark:text-slate-300">
+          {paymentLogs.map((payment) => (
+            <div
+              key={payment.id}
+              className="flex items-center justify-between rounded-xl border border-neutral-200 dark:border-slate-600 bg-white dark:bg-slate-800 p-4"
+            >
+              <div className="flex-1">
+                <p className="font-semibold text-brand-secondary dark:text-slate-200">
+                  {payment.clientName}
                 </p>
+                <p className="text-xs uppercase text-neutral-500 dark:text-slate-400">
+                  {payment.method} · {format(new Date(payment.date), "MMM d, yyyy")}
+                </p>
+                {payment.notes && (
+                  <p className="mt-1 text-xs text-neutral-600 dark:text-slate-400">{payment.notes}</p>
+                )}
               </div>
-            ))}
-            {invoices.length === 0 && (
-              <p className="text-sm text-neutral-500">No invoices issued yet.</p>
-            )}
-          </div>
-        </Card>
-      </section>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-brand-secondary dark:text-slate-200">
+                  {(payment.amount / 100).toLocaleString('en-US', { style: 'currency', currency: payment.currency })}
+                </p>
+                <EditPaymentButton payment={payment} />
+                <DeletePaymentButton paymentId={payment.id} amount={payment.amount} currency={payment.currency} />
+              </div>
+            </div>
+          ))}
+          {paymentLogs.length === 0 && (
+            <p className="text-sm text-neutral-500 dark:text-slate-400">No payments recorded yet.</p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -2,8 +2,8 @@ import { listAuditLogs } from "@/lib/data/audit";
 import { TopBar } from "@/components/layout/top-bar";
 import { Table } from "@/components/ui/table";
 
-export default function AuditLogPage() {
-  const logs = listAuditLogs();
+export default async function AuditLogPage() {
+  const logs = await listAuditLogs();
 
   return (
     <div className="space-y-6">

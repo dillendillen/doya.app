@@ -29,6 +29,7 @@ export type Dog = {
   breed: string;
   sex: "M" | "F";
   dob: string | null;
+  weightKg: number | null;
   medicalFlags: string[];
   triggers: string[];
   tags: string[];

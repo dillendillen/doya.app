@@ -4,6 +4,20 @@
 
 :root {
   color-scheme: light;
+  --brand-primary: #E66E2F;
+  --brand-secondary: #1B1F3B;
+  --brand-accent: #FFC857;
+  --brand-neutral: #222222;
+  --brand-surface: #F4F4F4;
+}
+
+.dark {
+  color-scheme: dark;
+  --brand-primary: #F97316;
+  --brand-secondary: #E2E8F0;
+  --brand-accent: #FBBF24;
+  --brand-neutral: #F1F5F9;
+  --brand-surface: #0F172A;
 }
 
 html,
@@ -12,10 +26,71 @@ body {
 }
 
 body {
-  @apply bg-brand-surface text-brand-neutral;
+  @apply bg-gradient-to-br from-slate-50 via-white to-slate-50 text-neutral-800 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 dark:text-slate-100;
   font-feature-settings: "liga" 1, "kern" 1;
 }
 
 a {
-  @apply text-brand-secondary underline-offset-4 hover:underline;
+  color: var(--brand-secondary);
+  @apply underline-offset-4 hover:underline;
+}
+
+/* Modern card styling */
+@layer components {
+  .card-modern {
+    @apply rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur-sm shadow-sm transition-all hover:shadow-lg hover:border-slate-300 hover:bg-white;
+  }
+  
+  .btn-primary {
+    @apply rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95;
+    background: linear-gradient(to right, var(--brand-primary), #f97316, var(--brand-primary));
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(to right, #dc6600, #ea580c, #dc6600);
+  }
+  
+  .btn-secondary {
+    @apply rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:shadow-md active:scale-95 hover:bg-slate-50;
+  }
+
+  .gradient-bg-primary {
+    @apply bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50;
+  }
+
+  .gradient-bg-secondary {
+    @apply bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50;
+  }
+
+  .gradient-bg-warning {
+    @apply bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50;
+  }
+
+  /* Dark mode input styling for dialogs */
+  .dark input[type="text"],
+  .dark input[type="number"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark select,
+  .dark textarea {
+    @apply bg-slate-800 text-white border-slate-600;
+  }
+
+  .dark input[type="text"]:focus,
+  .dark input[type="number"]:focus,
+  .dark input[type="email"]:focus,
+  .dark input[type="password"]:focus,
+  .dark input[type="date"]:focus,
+  .dark input[type="time"]:focus,
+  .dark select:focus,
+  .dark textarea:focus {
+    @apply border-slate-500 bg-slate-700;
+  }
+
+  /* Dark mode dialog panel background */
+  .dark .dialog-panel {
+    @apply bg-slate-800 text-white;
+  }
 }

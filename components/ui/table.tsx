@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { clsx } from "clsx";
 
 type TableProps = {
-  headers: string[];
+  headers: (string | ReactNode)[];
   children: ReactNode;
   className?: string;
 };
@@ -13,9 +13,9 @@ export function Table({ headers, children, className }: TableProps) {
       <table className="min-w-full divide-y divide-neutral-200 bg-white">
         <thead className="bg-neutral-50">
           <tr>
-            {headers.map((header) => (
+            {headers.map((header, index) => (
               <th
-                key={header}
+                key={typeof header === "string" ? header : index}
                 scope="col"
                 className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500"
               >
